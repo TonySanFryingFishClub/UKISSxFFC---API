@@ -217,4 +217,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Pem file
+*.pem
+
 # End of https://www.toptal.com/developers/gitignore/api/node,windows,macos,dotenv,linux

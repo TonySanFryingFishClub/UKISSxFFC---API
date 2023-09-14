@@ -27,6 +27,11 @@ const CONFIG = {
     TOKEN_HEADER_KEY: process.env.TOKEN_HEADER_KEY || 'auth_token',
     SECRET: process.env.SECRET || '',
   },
+  OTHERS: {
+    PROJECT_ID: process.env.PROJECT_ID || '',
+    UKISS_API: process.env.UKISS_API || '',
+    UKISS_TOKEN: process.env.UKISS_TOKEN || '',
+  },
   DATABASE: {
     MONGO_URL:
       process.env.NODE_ENV === 'production'
