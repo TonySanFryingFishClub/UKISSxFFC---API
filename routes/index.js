@@ -20,11 +20,12 @@ router.get('/ping', (_req, res) => {
 router.post(
   '/requestMintAddress',
   validateJWTToken,
-  async (req, res) => {
+  async (req, _res, next) => {
     const { deviceId, tier, amount } = req.body;
-    const exist = await User.exist({ deviceId });
-    if (exist) {
-      const user = await User.findOne({ deviceId });
+    console.log("🚀 ~ file: index.js:25 ~ deviceId, tier, amount:", deviceId, tier, amount)
+    const user = await User.findOne({ deviceId });
+    console.log('🚀 ~ file: index.js:27 ~ exist:', !!user);
+    if (user) {
       if (user?.address) {
         handleMint({
           id: user._id,
@@ -40,9 +41,9 @@ router.post(
         next();
       }
     } else {
-      const user = await User.create({ deviceId });
-      await user.save();
-      const request = await Request.create({ deviceId, tier, amount, user: user._id });
+      const newUser = await User.create({ deviceId });
+      await newUser.save();
+      const request = await Request.create({ deviceId, tier, amount, user: newUser._id });
       await request.save();
       req.body['serial'] = request.serial;
       req.body['requestId'] = request._id;
@@ -52,10 +53,12 @@ router.post(
   handleMintRequest
 );
 router.post('/ukissResponse', validateJWTToken, decryptResponse, async (req, res) => {
-  const {data} = req.body;
-  console.log("🚀 ~ file: index.js:56 ~ router.post ~ data:", data);
+  const { data } = req.body;
+  console.log("🚀 ~ file: index.js:57 ~ router.post ~ data:", data)
   const { WALLET_ADDRESS, RET_MESSAGE } = data?.PAYLOAD;
+  console.log("🚀 ~ file: index.js:60 ~ router.post ~ WALLET_ADDRESS, RET_MESSAGE:", WALLET_ADDRESS, RET_MESSAGE)
   const request = await Request.findById(RET_MESSAGE);
+  console.log("🚀 ~ file: index.js:62 ~ router.post ~ request:", request)
   if (request) {
     const user = await User.findByIdAndUpdate(request.user, {address: WALLET_ADDRESS}, {new: true});
     handleMint({
@@ -65,7 +68,9 @@ router.post('/ukissResponse', validateJWTToken, decryptResponse, async (req, res
       amount: request.amount,
     });
     await Request.findByIdAndUpdate(request.id, { isCompleted: true });
-    res.status(OK).json(apiResponse({}));
+    res.status(OK).json(apiResponse({
+      message: 'Success',
+    }));
   }
 });
 

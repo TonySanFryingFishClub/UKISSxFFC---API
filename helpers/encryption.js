@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import axios from 'axios';
 import CONFIG from '../config/index.js';
+import fs from 'fs';
+import { OK } from 'http-status-codes';
 
 function generateRandomKeyAndIV() {
   const aesKey = crypto.randomBytes(32); // 256 bits (32 bytes) for AES-256
@@ -20,11 +22,14 @@ function encryptData(data, aesKey, iv) {
 export async function handleMintRequest(req, res, next) {
   try {
     const { serial, requestId } = req.body;
+    console.log("🚀 ~ file: encryption.js:23 ~ handleMintRequest ~ serial, requestId:", serial, requestId)
     // Step 1: Generate random AES key and IV
     const { aesKey, iv } = generateRandomKeyAndIV();
+    console.log("🚀 ~ file: encryption.js:26 ~ handleMintRequest ~ aesKey, iv:", aesKey, iv)
 
     // Step 2: Load UKISS's public key
-    const publicKey = fs.readFileSync('ukiss_public_key.pem', 'utf8');
+    const publicKey = fs.readFileSync('public-from-ukiss.pem', 'utf8');
+    console.log("🚀 ~ file: encryption.js:30 ~ handleMintRequest ~ publicKey:", publicKey)
 
     // Step 3: Encrypt the AES key using UKISS's public key
     const encryptedAesKey = crypto.publicEncrypt(
@@ -65,8 +70,11 @@ export async function handleMintRequest(req, res, next) {
     });
     console.log('🚀 ~ file: index.js:114 ~ handleMintRequest ~ response:', response.data);
 
-    res.status(OK).json(apiResponse({}));
+    res.status(OK).json(apiResponse({
+      message: 'Success',
+    }));
   } catch (error) {
+    console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error)
     next(error);
   }
 }

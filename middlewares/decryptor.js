@@ -14,10 +14,11 @@ function decryptData(data, privateKeyPath) {
   return decryptedData.toString('utf8');
 }
 
-export const decryptResponse = (req, _res, _next) => {
+export const decryptResponse = (req, _res, next) => {
   try {
     const { ENCRYPTED_KEY, TOKEN } = req.body;
     const decryptedAesKey = decryptData(ENCRYPTED_KEY?.CIPHERTEXT, 'id_ukiss_4096.pub.pem');
+    console.log("🚀 ~ file: decryptor.js:21 ~ decryptResponse ~ decryptedAesKey:", decryptedAesKey)
     const iv = Buffer.from(ENCRYPTED_KEY?.IV, 'base64');
     const decipher = crypto.createDecipheriv(
       'aes-256-cbc',
@@ -25,8 +26,7 @@ export const decryptResponse = (req, _res, _next) => {
       iv
     );
     const decryptedTokenPayload = decipher.update(TOKEN, 'base64', 'utf8') + decipher.final('utf8');
-
-    console.log('Decrypted Token Payload:', decryptedTokenPayload);
+    console.log("🚀 ~ file: decryptor.js:29 ~ decryptResponse ~ decryptedTokenPayload:", decryptedTokenPayload)
     req.body.data = JSON.parse(decryptedTokenPayload);
     next();
   } catch (error) {

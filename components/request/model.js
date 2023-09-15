@@ -13,7 +13,6 @@ const RequestSchema = new Schema({
   },
   serial: {
     type: String,
-    required: true,
     unique: true,
   },
   tier: {
@@ -28,7 +27,6 @@ const RequestSchema = new Schema({
   deviceId: {
     type: String,
     required: true,
-    unique: true,
   },
   user: {
     type: [Schema.Types.ObjectId],
@@ -42,27 +40,26 @@ const RequestSchema = new Schema({
 
 async function generateAndSetSerialNumber() {
   try {
-    const existingCount = await RequestSchema.countDocuments({});
-    const serialNumber = String(existingCount + 1).padStart(4, '0');
+    const existingCount = await mongoose.models.Request.countDocuments({});
+    console.log("🚀 ~ file: model.js:45 ~ generateAndSetSerialNumber ~ existingCount:", existingCount)
+    const serialNumber = existingCount > 0 ? String(existingCount + 1).padStart(4, '0') : '0000';
+    console.log("🚀 ~ file: model.js:50 ~ generateAndSetSerialNumber ~ serialNumber:", serialNumber)
     return serialNumber;
   } catch (error) {
     throw error; // Handle the error appropriately
   }
 }
 
-RequestSchema.pre('save', async function (next) {
+RequestSchema.pre('save', async function () {
   // Check if the document is new or being updated
   if (this.isNew) {
     try {
       const doc = this;
       const serialNumber = await generateAndSetSerialNumber();
       doc.serial = serialNumber;
-      next();
     } catch (error) {
-      next(error); // Pass the error to the next middleware or handler
+      console.log("🚀 ~ file: model.js:62 ~ error:", error)
     }
-  } else {
-    next();
   }
 });
 
