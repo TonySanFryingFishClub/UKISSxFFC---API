@@ -31,6 +31,9 @@ const CONFIG = {
     PROJECT_ID: process.env.PROJECT_ID || '',
     UKISS_API: process.env.UKISS_API || '',
     UKISS_TOKEN: process.env.UKISS_TOKEN || '',
+    CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || '',
+    ALCHEMY_ID: process.env.ALCHEMY_ID || '',
+    WALLET_KEY: process.env.WALLET_KEY || '',
   },
   DATABASE: {
     MONGO_URL:
