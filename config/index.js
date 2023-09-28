@@ -1,11 +1,10 @@
 import 'dotenv/config';
-import pkg from '../../package.json' assert { type: 'json' };
 
 const CONFIG = {
   APP: {
-    NAME: pkg.name,
-    VERSION: pkg.version,
-    VER: `v${pkg.version[0]}`,
+    NAME: 'api',
+    VERSION: '1.0.0',
+    VER: `v1`,
     HOST: process.env.APP_HOST,
     BASE_URL: process.env.API_BASE_URL,
     PORT: process.env.NODE_ENV === 'test' ? 8888 : process.env.PORT || 8080,
@@ -38,7 +37,7 @@ const CONFIG = {
   DATABASE: {
     MONGO_URL:
       process.env.NODE_ENV === 'production'
-        ? `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ipm2ka0.mongodb.net/?retryWrites=true&w=majority`
+        ? `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@apitestnet.bv2i2at.mongodb.net/?retryWrites=true&w=majority`
         : `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   },
 };
