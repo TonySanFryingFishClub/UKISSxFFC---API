@@ -1,13 +1,35 @@
 import { OK } from 'http-status-codes';
 import { Router } from 'express';
+import { body } from 'express-validator';
 
 import { validateJWTToken } from '../middlewares/validator.js';
 import { decryptResponse } from '../middlewares/decryptor.js';
 import { handleMintRequest } from '../helpers/encryption.js';
+import { sanitizer } from '../helpers/dataSanitizers.js';
 import User from '../components/user/model.js';
 import Request from '../components/request/model.js';
 
 import { handleMint } from '../helpers/handleMint.js';
+
+const apiResponse = [
+  body('PROJECT_ID')
+    .isString()
+    .withMessage('`PROJECT_ID` must be a string')
+    .custom((value) => {
+      return value === process.env.PROJECT_ID;
+    })
+    .withMessage('Invalid `PROJECT_ID`'),
+  body('ENCRYPTED_KEY').isObject().withMessage('`ENCRYPTED_KEY` must be an object'),
+  body('ENCRYPTED_KEY.CIPHERTEXT').isString().withMessage('`CIPHERTEXT` must be a string').custom(value => {
+    return !!value.trim()
+  }).withMessage('Invalid `CIPHERTEXT`'),
+  body('ENCRYPTED_KEY.IV').isString().withMessage('`IV` must be a string').custom(value => {
+    return !!value.trim()
+  }).withMessage("Invalid `IV`"),
+  body('TOKEN').isString().withMessage('`TOKEN` must be a string').custom((value) => {
+    return !!value.trim();
+  }).withMessage('Invalid `TOKEN`'),
+];
 
 const router = Router();
 
@@ -52,7 +74,7 @@ router.post(
   },
   handleMintRequest
 );
-router.post('/ukissResponse', validateJWTToken, decryptResponse, async (req, res) => {
+router.post('/ukissResponse', validateJWTToken, sanitizer(apiResponse), decryptResponse, async (req, res) => {
   const { data } = req.body;
   console.log("🚀 ~ file: index.js:57 ~ router.post ~ data:", data)
   const { WALLET_ADDRESS, RET_MESSAGE } = data?.PAYLOAD;

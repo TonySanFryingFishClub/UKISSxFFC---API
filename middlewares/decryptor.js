@@ -1,17 +1,30 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
+import { METHOD_FAILURE } from 'http-status-codes';
+
+import APIError from "../helpers/apiError.js";
+
+const moduleUrl = import.meta.url;
+const modulePath = dirname(fileURLToPath(moduleUrl));
 
 // Function to decrypt data using private key
 function decryptData(data, privateKeyPath) {
-  const privateKey = fs.readFileSync(privateKeyPath, 'utf8'); // Replace with the actual path to your private key file
-  const decryptedData = crypto.privateDecrypt(
-    {
-      key: privateKey,
-      padding: crypto.constants.RSA_PKCS1_PADDING,
-    },
-    Buffer.from(data, 'base64')
-  );
-  return decryptedData.toString('utf8');
+  try {
+    const keyPath = path.join(modulePath, '..', privateKeyPath);
+    const privateKey = fs.readFileSync(keyPath, 'utf8');
+    const decryptedData = crypto.publicDecrypt(
+      {
+        key: privateKey,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
+      },
+      Buffer.from(data, 'base64')
+    );
+    return decryptedData.toString('utf8');
+  } catch (error) {
+    throw new APIError(error.reason || 'Error decrypting data', METHOD_FAILURE);
+  }
 }
 
 export const decryptResponse = (req, _res, next) => {
@@ -30,7 +43,6 @@ export const decryptResponse = (req, _res, next) => {
     req.body.data = JSON.parse(decryptedTokenPayload);
     next();
   } catch (error) {
-    console.log("🚀 ~ file: decryptor.js:33 ~ decryptResponse ~ error:", error)
     next(error);
   }
 };
