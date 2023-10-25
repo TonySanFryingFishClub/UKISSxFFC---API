@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import ValidationError from './error.js';
+import ValidationError from './validationError.js';
 
 const catchValidatorError = (req, _res, next) => {
   const errors = validationResult(req);

@@ -2,47 +2,42 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
-import { METHOD_FAILURE } from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
+import jose from 'node-jose';
 
 import APIError from "../helpers/apiError.js";
 
 const moduleUrl = import.meta.url;
 const modulePath = dirname(fileURLToPath(moduleUrl));
 
-// Function to decrypt data using private key
-function decryptData(data, privateKeyPath) {
+async function decryptJWE(encryptedPayload) {
   try {
-    const keyPath = path.join(modulePath, '..', privateKeyPath);
-    const privateKey = fs.readFileSync(keyPath, 'utf8');
-    const decryptedData = crypto.publicDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_PADDING,
-      },
-      Buffer.from(data, 'base64')
+    // Create a key store and load your private key
+    const keystore = jose.JWK.createKeyStore();
+    const keyJson = JSON.parse(
+      fs.readFileSync(`${modulePath.replace('/middlewares', '')}/rsa-key.json`, 'utf8')
     );
-    return decryptedData.toString('utf8');
+    const privateKey = await keystore.add(keyJson, 'json');
+
+    const parsed = await jose.JWE.createDecrypt(privateKey).decrypt(encryptedPayload);
+
+    const decryptedPayload = JSON.parse(parsed.plaintext.toString());
+
+    return decryptedPayload;
   } catch (error) {
-    throw new APIError(error.reason || 'Error decrypting data', METHOD_FAILURE);
+    throw new APIError(error.message, StatusCodes.BAD_REQUEST);
   }
 }
 
-export const decryptResponse = (req, _res, next) => {
+export const decryptResponse = async (req, _res, next) => {
   try {
-    const { ENCRYPTED_KEY, TOKEN } = req.body;
-    const decryptedAesKey = decryptData(ENCRYPTED_KEY?.CIPHERTEXT, 'id_ukiss_4096.pub.pem');
-    console.log("🚀 ~ file: decryptor.js:21 ~ decryptResponse ~ decryptedAesKey:", decryptedAesKey)
-    const iv = Buffer.from(ENCRYPTED_KEY?.IV, 'base64');
-    const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
-      Buffer.from(decryptedAesKey, 'base64'),
-      iv
-    );
-    const decryptedTokenPayload = decipher.update(TOKEN, 'base64', 'utf8') + decipher.final('utf8');
-    console.log("🚀 ~ file: decryptor.js:29 ~ decryptResponse ~ decryptedTokenPayload:", decryptedTokenPayload)
-    req.body.data = JSON.parse(decryptedTokenPayload);
+    const { TOKEN } = req.body;
+    const decryptedPayload = await decryptJWE(TOKEN);
+    console.log("🚀 ~ file: decryptor.js:43 ~ decryptResponse ~ decryptedPayload:", decryptedPayload)
+    req.body.data = decryptedPayload;
     next();
   } catch (error) {
-    next(error);
+    console.log("🚀 ~ file: decryptor.js:46 ~ decryptResponse ~ error:", error)
+    next(error)
   }
 };

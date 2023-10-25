@@ -1,6 +1,9 @@
-import { OK } from 'http-status-codes';
+import { OK, NOT_FOUND } from 'http-status-codes';
 import { Router } from 'express';
 import { body } from 'express-validator';
+import path, { dirname } from 'path';
+import jose from 'node-jose';
+import fs from 'fs';
 
 import { validateJWTToken } from '../middlewares/validator.js';
 import { decryptResponse } from '../middlewares/decryptor.js';
@@ -10,8 +13,14 @@ import User from '../components/user/model.js';
 import Request from '../components/request/model.js';
 
 import { handleMint } from '../helpers/handleMint.js';
+import { apiResponse } from '../helpers/response.js';
+import { fileURLToPath } from 'url';
+import APIError from '../helpers/apiError.js';
 
-const apiResponse = [
+const moduleUrl = import.meta.url;
+const modulePath = dirname(fileURLToPath(moduleUrl));
+
+const apiValidation = [
   body('PROJECT_ID')
     .isString()
     .withMessage('`PROJECT_ID` must be a string')
@@ -19,16 +28,13 @@ const apiResponse = [
       return value === process.env.PROJECT_ID;
     })
     .withMessage('Invalid `PROJECT_ID`'),
-  body('ENCRYPTED_KEY').isObject().withMessage('`ENCRYPTED_KEY` must be an object'),
-  body('ENCRYPTED_KEY.CIPHERTEXT').isString().withMessage('`CIPHERTEXT` must be a string').custom(value => {
-    return !!value.trim()
-  }).withMessage('Invalid `CIPHERTEXT`'),
-  body('ENCRYPTED_KEY.IV').isString().withMessage('`IV` must be a string').custom(value => {
-    return !!value.trim()
-  }).withMessage("Invalid `IV`"),
-  body('TOKEN').isString().withMessage('`TOKEN` must be a string').custom((value) => {
-    return !!value.trim();
-  }).withMessage('Invalid `TOKEN`'),
+  body('TOKEN')
+    .isString()
+    .withMessage('`TOKEN` must be a string')
+    .custom((value) => {
+      return !!value;
+    })
+    .withMessage('Missing `TOKEN`'),
 ];
 
 const router = Router();
@@ -39,17 +45,38 @@ router.get('/', (_req, res) => {
 router.get('/ping', (_req, res) => {
   res.status(OK).json({ message: 'pong' });
 });
+router.post('/generateKey', async (_req, res) => {
+  try {
+    // Create a key store and generate an RSA key
+    const keystore = jose.JWK.createKeyStore();
+    const key = await keystore.generate('RSA', 2048, {
+      alg: 'RSA-OAEP',
+      use: 'enc',
+      format: 'jwk',
+    });
+
+    // Convert the key to a JSON object
+    const keyJson = key.toJSON(true);
+    const keyPath = `${modulePath.replace('/routes', '')}/rsa-key.json`;
+
+    console.log('🚀 ~ file: index.js:61 ~ router.post ~ keyPath:', keyPath);
+    // Save the key to a file
+    fs.writeFileSync(keyPath, JSON.stringify(keyJson), 'utf8');
+
+    res.status(OK).json({ message: 'success' });
+  } catch (error) {
+    console.error('Error:', error);
+  }
+});
 router.post(
   '/requestMintAddress',
   validateJWTToken,
   async (req, _res, next) => {
     const { deviceId, tier, amount } = req.body;
-    console.log("🚀 ~ file: index.js:25 ~ deviceId, tier, amount:", deviceId, tier, amount)
     const user = await User.findOne({ deviceId });
-    console.log('🚀 ~ file: index.js:27 ~ exist:', !!user);
     if (user) {
       if (user?.address) {
-        handleMint({
+        await handleMint({
           id: user._id,
           address: user.address,
           tier,
@@ -74,26 +101,47 @@ router.post(
   },
   handleMintRequest
 );
-router.post('/ukissResponse', validateJWTToken, sanitizer(apiResponse), decryptResponse, async (req, res) => {
-  const { data } = req.body;
-  console.log("🚀 ~ file: index.js:57 ~ router.post ~ data:", data)
-  const { WALLET_ADDRESS, RET_MESSAGE } = data?.PAYLOAD;
-  console.log("🚀 ~ file: index.js:60 ~ router.post ~ WALLET_ADDRESS, RET_MESSAGE:", WALLET_ADDRESS, RET_MESSAGE)
-  const request = await Request.findById(RET_MESSAGE);
-  console.log("🚀 ~ file: index.js:62 ~ router.post ~ request:", request)
-  if (request) {
-    const user = await User.findByIdAndUpdate(request.user, {address: WALLET_ADDRESS}, {new: true});
-    handleMint({
-      id: user._id,
-      address: user.address,
-      tier: request.tier,
-      amount: request.amount,
-    });
-    await Request.findByIdAndUpdate(request.id, { isCompleted: true });
-    res.status(OK).json(apiResponse({
-      message: 'Success',
-    }));
+router.post(
+  '/ukissResponse',
+  validateJWTToken,
+  sanitizer(apiValidation),
+  decryptResponse,
+  async (req, res, next) => {
+    try {
+      const { data } = req.body;
+      const { WALLET_ADDRESS, RET_MESSAGE } = data;
+      const request = await Request.findById(RET_MESSAGE);
+      if (request) {
+        const user = await User.findByIdAndUpdate(
+          request.user,
+          { address: WALLET_ADDRESS },
+          { new: true }
+        );
+
+        await handleMint({
+          id: user._id,
+          address: user.address,
+          tier: request.tier[0],
+          amount: request.amount,
+        });
+        await Request.findByIdAndUpdate(request.id, { isCompleted: true });
+
+        res.status(OK).json(
+          apiResponse({
+            message: 'Success',
+          })
+        );
+      } else {
+        res.status(NOT_FOUND).json(
+          apiResponse({
+            message: `Request with id ${RET_MESSAGE} not found`,
+          })
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;
