@@ -15,8 +15,9 @@ const FORMAT = 'compact';
 const CONTENT_ALG = 'A256CBC-HS512';
 
 async function generateJWE(data) {
-  const pemData = fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.pem`);
+  const pemData = fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.spki.pem`);
   const key = await jose.JWK.asKey(pemData, 'pem');
+  console.log('🚀 ~ file: encryption.js:21 ~ generateJWE ~ key:', key, { alg: 'RSA-OAEP-256' });
 
   const payload = {
     ...data,
@@ -43,6 +44,7 @@ export async function handleMintRequest(req, res, next) {
       SERIAL_NO: serial,
       RET_MESSAGE: requestId,
     });
+    console.log("🚀 ~ file: encryption.js:46 ~ handleMintRequest ~ jwe:", jwe)
 
     const projectId = CONFIG.OTHERS.PROJECT_ID;
 
@@ -51,15 +53,17 @@ export async function handleMintRequest(req, res, next) {
       TOKEN: jwe,
     };
 
-    const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
-      headers: {
-        'Content-Type': 'application/json',
-        ExternalAPIBearerToken: CONFIG.OTHERS.UKISS_TOKEN,
-      },
-    });
-    console.log("🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:", response)
+    // const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     ExternalAPIBearerToken: CONFIG.OTHERS.UKISS_TOKEN,
+    //   },
+    // });
+    // console.log("🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:", response)
 
-    res.status(StatusCodes.OK).json(apiResponse(requestPayload));
+    res.status(StatusCodes.OK).json(apiResponse({
+      message: 'success',
+    }));
   } catch (error) {
     console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error)
     next(error);
