@@ -16,7 +16,9 @@ const CONTENT_ALG = 'A256CBC-HS512';
 
 async function generateJWE(data) {
   const keystore = jose.JWK.createKeyStore();
-  const keyJson = JSON.parse(fs.readFileSync(`${modulePath.replace("/helpers", "")}/rsa-key.json`, 'utf8'));
+  const keyJson = JSON.parse(
+    fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.pem`)
+  );
   const key = await keystore.add(keyJson, 'json');
 
   const payload = {
@@ -27,7 +29,6 @@ async function generateJWE(data) {
     {
       format: FORMAT,
       contentAlg: CONTENT_ALG,
-      fields: { cty: 'json' },
     },
     key
   )

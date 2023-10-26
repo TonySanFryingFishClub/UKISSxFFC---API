@@ -20,6 +20,12 @@ import APIError from '../helpers/apiError.js';
 const moduleUrl = import.meta.url;
 const modulePath = dirname(fileURLToPath(moduleUrl));
 
+const FORMAT = 'compact';
+const CONTENT_ALG = 'A256CBC-HS512';
+const ALG = 'RSA-OAEP';
+const PADDING = 'RSA_PKCS1_OAEP_PADDING';
+const HASH = 'sha512';
+
 const apiValidation = [
   body('PROJECT_ID')
     .isString()
@@ -50,9 +56,9 @@ router.post('/generateKey', async (_req, res) => {
     // Create a key store and generate an RSA key
     const keystore = jose.JWK.createKeyStore();
     const key = await keystore.generate('RSA', 2048, {
-      alg: 'RSA-OAEP',
+      alg: ALG,
       use: 'enc',
-      format: 'jwk',
+      format: FORMAT,
     });
 
     // Convert the key to a JSON object
