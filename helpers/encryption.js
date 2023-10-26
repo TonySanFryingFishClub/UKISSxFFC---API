@@ -15,11 +15,8 @@ const FORMAT = 'compact';
 const CONTENT_ALG = 'A256CBC-HS512';
 
 async function generateJWE(data) {
-  const keystore = jose.JWK.createKeyStore();
-  const keyJson = JSON.parse(
-    fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.pem`)
-  );
-  const key = await keystore.add(keyJson, 'json');
+  const pemData = fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.pem`);
+  const key = await jose.JWK.asKey(pemData, 'pem');
 
   const payload = {
     ...data,
@@ -29,6 +26,7 @@ async function generateJWE(data) {
     {
       format: FORMAT,
       contentAlg: CONTENT_ALG,
+      fields: { alg: 'RSA-OAEP' },
     },
     key
   )
