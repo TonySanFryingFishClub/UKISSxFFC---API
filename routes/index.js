@@ -75,16 +75,16 @@ router.post('/generateKey', async (_req, res) => {
     console.error('Error:', error);
   }
 });
-// router.post("/mintNFT", async(req, res, next) => {
-//   try {
-//     const { address, tier, amount } = req.body;
-//     await handleMint({address, tier, amount});
-//     res.status(OK).json({ message: 'success' });
-//   } catch (error) {
-//     console.log("🚀 ~ file: index.js:82 ~ router.post ~ error:", error)
-//     next(error);
-//   }
-// })
+router.post("/mintNFT", async(req, res, next) => {
+  try {
+    const { address, tier, amount } = req.body;
+    await handleMint({address, tier, amount});
+    res.status(OK).json({ message: 'success' });
+  } catch (error) {
+    console.log("🚀 ~ file: index.js:82 ~ router.post ~ error:", error)
+    next(error);
+  }
+})
 router.post(
   '/requestMintAddress',
   validateJWTToken,
