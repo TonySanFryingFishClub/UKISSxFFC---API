@@ -74,9 +74,10 @@ router.post('/generateKey', async (_req, res) => {
     console.error('Error:', error);
   }
 });
-router.post("/mintNFT", async(req, res) => {
+router.post("/mintNFT", async(req, res, next) => {
   try {
     const { address, tier, amount } = req.body;
+    console.log("🚀 ~ file: index.js:80 ~ router.post ~ address, tier, amount:", address, tier, amount)
     await handleMint(address, tier, amount);
     res.status(OK).json({ message: 'success' });
   } catch (error) {
