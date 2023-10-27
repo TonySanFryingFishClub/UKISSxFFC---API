@@ -75,20 +75,16 @@ router.post('/generateKey', async (_req, res) => {
     console.error('Error:', error);
   }
 });
-router.post("/mintNFT", async(req, res, next) => {
-  try {
-    const { address, tier, amount } = req.body;
-    console.log("🚀 ~ file: index.js:80 ~ router.post ~ address, tier, amount:", address, tier, amount)
-    if (!ethers.utils.isAddress(address)) {
-      throw APIError('Invalid address', StatusCodes.BAD_REQUEST);
-    }
-    await handleMint(address, tier, amount);
-    res.status(OK).json({ message: 'success' });
-  } catch (error) {
-    console.log("🚀 ~ file: index.js:82 ~ router.post ~ error:", error)
-    next(error);
-  }
-})
+// router.post("/mintNFT", async(req, res, next) => {
+//   try {
+//     const { address, tier, amount } = req.body;
+//     await handleMint({address, tier, amount});
+//     res.status(OK).json({ message: 'success' });
+//   } catch (error) {
+//     console.log("🚀 ~ file: index.js:82 ~ router.post ~ error:", error)
+//     next(error);
+//   }
+// })
 router.post(
   '/requestMintAddress',
   validateJWTToken,
@@ -98,7 +94,6 @@ router.post(
     if (user) {
       if (user?.address) {
         await handleMint({
-          id: user._id,
           address: user.address,
           tier,
           amount,
@@ -140,7 +135,6 @@ router.post(
         );
 
         await handleMint({
-          id: user._id,
           address: user.address,
           tier: request.tier[0],
           amount: request.amount,

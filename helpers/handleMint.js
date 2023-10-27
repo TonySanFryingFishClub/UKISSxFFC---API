@@ -14,15 +14,17 @@ const NFTContract = new ethers.Contract(CONTRACT_ADDRESS, ContractABI, signer);
 
 export const handleMint = async ({ address, tier, amount }) => {
   try {
+    if (!ethers.utils.isAddress(address)) {
+      throw new APIError('Invalid address', StatusCodes.BAD_REQUEST);
+    }
     const gas = await NFTContract.estimateGas.mint_for_User(address, amount, tier);
     const tx = await NFTContract.mint_for_User(address, amount, tier, {
       gasLimit: gas,
     });
-    const receipt = await tx.wait();
-    console.log('🚀 ~ file: handleMint.js:20 ~ handleMint ~ receipt:', receipt);
+    await tx.wait();
     console.log('🚀 ~ file: index.js:21 ~ handleMint ~ tx: NFT Minted Successfully');
   } catch (error) {
-    console.log("🚀 ~ file: handleMint.js:25 ~ handleMint ~ error:", error.reason)
+    console.log('🚀 ~ file: handleMint.js:25 ~ handleMint ~ error:', error.reason);
     throw new APIError(error.message, StatusCodes.BAD_REQUEST);
   }
 };
