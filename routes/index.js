@@ -4,6 +4,7 @@ import { body } from 'express-validator';
 import path, { dirname } from 'path';
 import jose from 'node-jose';
 import fs from 'fs';
+import { ethers } from 'ethers'
 
 import { validateJWTToken } from '../middlewares/validator.js';
 import { decryptResponse } from '../middlewares/decryptor.js';
@@ -78,6 +79,9 @@ router.post("/mintNFT", async(req, res, next) => {
   try {
     const { address, tier, amount } = req.body;
     console.log("🚀 ~ file: index.js:80 ~ router.post ~ address, tier, amount:", address, tier, amount)
+    if (!ethers.utils.isAddress(address)) {
+      throw APIError('Invalid address', StatusCodes.BAD_REQUEST);
+    }
     await handleMint(address, tier, amount);
     res.status(OK).json({ message: 'success' });
   } catch (error) {
