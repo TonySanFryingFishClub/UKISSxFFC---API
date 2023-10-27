@@ -53,19 +53,19 @@ export async function handleMintRequest(req, res, next) {
       TOKEN: jwe,
     };
 
-    // const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     ExternalAPIBearerToken: CONFIG.OTHERS.UKISS_TOKEN,
-    //   },
-    // });
-    // console.log("🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:", response)
+    const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
+      headers: {
+        'Content-Type': 'application/json',
+        ExternalAPIBearerToken: CONFIG.OTHERS.UKISS_TOKEN,
+      },
+    });
+    console.log("🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:", response.data)
 
     res.status(StatusCodes.OK).json(apiResponse({
       message: 'success',
     }));
   } catch (error) {
-    console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error)
+    console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error.message)
     next(error);
   }
 }
