@@ -16,7 +16,7 @@ const CONTENT_ALG = 'A256CBC-HS512';
 
 async function generateJWE(data) {
   const pemData = fs.readFileSync(`${modulePath.replace('/helpers', '')}/id_ukiss_4096.pub.spki.pem`);
-  const key = await jose.JWK.asKey(pemData, 'pem');
+  const key = await jose.JWK.asKey(pemData, 'spki');
   console.log('🚀 ~ file: encryption.js:21 ~ generateJWE ~ key:', key, { alg: 'RSA-OAEP-256' });
 
   const payload = {
