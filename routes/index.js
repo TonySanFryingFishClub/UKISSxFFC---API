@@ -106,7 +106,7 @@ router.post(
       } else {
         const request = await Request.create({ deviceId, tier, amount, user: user._id });
         await request.save();
-        req.body['serial'] = request.serial;
+        req.body['serial'] = request.deviceId;
         req.body['requestId'] = request._id;
         next();
       }
