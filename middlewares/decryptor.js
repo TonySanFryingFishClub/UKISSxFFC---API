@@ -14,12 +14,11 @@ async function decryptJWE(encryptedPayload) {
   try {
     // Create a key store and load your private key
     const keystore = jose.JWK.createKeyStore();
-    const keyJson = JSON.parse(
-      fs.readFileSync(`${modulePath.replace('/middlewares', '')}/rsa-key.json`, 'utf8')
-    );
-    const privateKey = await keystore.add(keyJson, 'json');
+    const pemData = fs.readFileSync(`${modulePath.replace('/middlewares', '')}/id_ukiss_4096.pem`);
+    const privateKey = await keystore.add(pemData, 'pem');
 
     const parsed = await jose.JWE.createDecrypt(privateKey).decrypt(encryptedPayload);
+    console.log("🚀 ~ file: decryptor.js:21 ~ decryptJWE ~ parsed:", parsed)
 
     const decryptedPayload = JSON.parse(parsed.plaintext.toString());
 

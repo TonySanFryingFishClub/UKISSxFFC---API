@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import path, { dirname } from 'path';
 import jose from 'node-jose';
+import forge from 'node-forge';
 import fs from 'fs';
 import { ethers } from 'ethers'
 
@@ -55,11 +56,8 @@ router.get('/ping', (_req, res) => {
 router.post('/generateKey', async (_req, res) => {
   try {
     // Create a key store and generate an RSA key
-    const pemData = fs.readFileSync(
-      `${modulePath.replace('/routes', '')}/id_ukiss_4096.pub.spki.pem`
-    );
-    const key = await jose.JWK.asKey(pemData, 'spki');
-    console.log('🚀 ~ file: encryption.js:21 ~ generateJWE ~ key:', key, { alg: 'RSA-OAEP-256' });
+    const pemData = fs.readFileSync(`${modulePath.replace('/routes', '')}/public-from-ukiss.pem`);
+    const key = await jose.JWK.asKey(pemData, 'pem');
     // Save the key to a file
      const payload = {
        SERIAL_NO: "0000",
