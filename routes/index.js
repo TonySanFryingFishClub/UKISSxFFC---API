@@ -55,22 +55,29 @@ router.get('/ping', (_req, res) => {
 router.post('/generateKey', async (_req, res) => {
   try {
     // Create a key store and generate an RSA key
-    const keystore = jose.JWK.createKeyStore();
-    const key = await keystore.generate('RSA', 2048, {
-      alg: ALG,
-      use: 'enc',
-      format: FORMAT,
-    });
-
-    // Convert the key to a JSON object
-    const keyJson = key.toJSON(true);
-    const keyPath = `${modulePath.replace('/routes', '')}/rsa-key.json`;
-
-    console.log('🚀 ~ file: index.js:61 ~ router.post ~ keyPath:', keyPath);
+    const pemData = fs.readFileSync(
+      `${modulePath.replace('/routes', '')}/id_ukiss_4096.pub.spki.pem`
+    );
+    const key = await jose.JWK.asKey(pemData, 'spki');
+    console.log('🚀 ~ file: encryption.js:21 ~ generateJWE ~ key:', key, { alg: 'RSA-OAEP-256' });
     // Save the key to a file
-    fs.writeFileSync(keyPath, JSON.stringify(keyJson), 'utf8');
+     const payload = {
+       SERIAL_NO: "0000",
+        RET_MESSAGE: "1234",
+     };
+    
+    const jwe = await jose.JWE.createEncrypt(
+      {
+        format: FORMAT,
+        contentAlg: CONTENT_ALG,
+        fields: { alg: 'RSA-OAEP' },
+      },
+      key
+    )
+      .update(JSON.stringify(payload))
+      .final();
 
-    res.status(OK).json({ message: 'success' });
+    res.status(OK).json({ message: 'success', jwe });
   } catch (error) {
     console.error('Error:', error);
   }
