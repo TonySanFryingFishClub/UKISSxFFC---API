@@ -80,6 +80,10 @@ router.post('/generateKey', async (_req, res) => {
     console.error('Error:', error);
   }
 });
+router.post('/decrypt', decryptResponse, async (req, res) => {
+  const { data } = req.body;
+  res.status(OK).json({ message: 'success', data });
+})
 router.post("/mintNFT", async(req, res, next) => {
   try {
     const { address, tier, amount } = req.body;
