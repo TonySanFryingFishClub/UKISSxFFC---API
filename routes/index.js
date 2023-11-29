@@ -5,7 +5,7 @@ import path, { dirname } from 'path';
 import jose from 'node-jose';
 import forge from 'node-forge';
 import fs from 'fs';
-import { ethers } from 'ethers'
+import { ethers } from 'ethers';
 
 import { validateJWTToken } from '../middlewares/validator.js';
 import { decryptResponse } from '../middlewares/decryptor.js';
@@ -56,14 +56,14 @@ router.get('/ping', (_req, res) => {
 router.post('/generateKey', async (_req, res) => {
   try {
     // Create a key store and generate an RSA key
-    const pemData = fs.readFileSync(`${modulePath.replace('/routes', '')}/public-from-ukiss.pem`);
+    const pemData = fs.readFileSync(`${modulePath.replace('/routes', '')}/id_ukiss_4096.pub.pem`);
     const key = await jose.JWK.asKey(pemData, 'pem');
     // Save the key to a file
-     const payload = {
-       SERIAL_NO: "0000",
-        RET_MESSAGE: "1234",
-     };
-    
+    const payload = {
+      SERIAL_NO: '0000',
+      RET_MESSAGE: '1234',
+    };
+
     const jwe = await jose.JWE.createEncrypt(
       {
         format: FORMAT,
@@ -83,17 +83,17 @@ router.post('/generateKey', async (_req, res) => {
 router.post('/decrypt', decryptResponse, async (req, res) => {
   const { data } = req.body;
   res.status(OK).json({ message: 'success', data });
-})
-router.post("/mintNFT", async(req, res, next) => {
+});
+router.post('/mintNFT', async (req, res, next) => {
   try {
     const { address, tier, amount } = req.body;
-    await handleMint({address, tier, amount});
+    await handleMint({ address, tier, amount });
     res.status(OK).json({ message: 'success' });
   } catch (error) {
-    console.log("🚀 ~ file: index.js:82 ~ router.post ~ error:", error)
+    console.log('🚀 ~ file: index.js:82 ~ router.post ~ error:', error);
     next(error);
   }
-})
+});
 router.post(
   '/requestMintAddress',
   validateJWTToken,

@@ -18,7 +18,6 @@ async function decryptJWE(encryptedPayload) {
     const privateKey = await keystore.add(pemData, 'pem');
 
     const parsed = await jose.JWE.createDecrypt(privateKey).decrypt(encryptedPayload);
-    console.log("🚀 ~ file: decryptor.js:21 ~ decryptJWE ~ parsed:", parsed)
 
     const decryptedPayload = JSON.parse(parsed.plaintext.toString());
 
