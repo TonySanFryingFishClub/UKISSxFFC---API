@@ -128,19 +128,16 @@ router.post(
 );
 router.post(
   '/ukissResponse',
-  // validateJWTToken,
+  validateJWTToken,
   sanitizer(apiValidation),
   decryptResponse,
   async (req, res, next) => {
     try {
       const { data } = req.body;
-      console.log("🚀 ~ file: index.js:137 ~ data:", data)
       if (Array.isArray(data)) {
         for await (const item of data) {
           const { WALLET_ADDRESS, RET_MESSAGE } = item;
-          console.log("🚀 ~ file: index.js:140 ~ forawait ~ RET_MESSAGE:", RET_MESSAGE)
           const request = await Request.findById(RET_MESSAGE);
-          console.log("🚀 ~ file: index.js:142 ~ forawait ~ request:", request)
           if (request) {
             const user = await User.findByIdAndUpdate(
               request.user,
@@ -149,13 +146,12 @@ router.post(
             );
 
             if (!request.isCompleted) {
-              console.log('🚀 ~ file: index.js:149 ~ forawait ~ isCompleted: called');
-              // await handleMint({
-              //   address: user.address,
-              //   tier: request.tier[0],
-              //   amount: request.amount,
-              // });
-              // await Request.findByIdAndUpdate(request.id, { isCompleted: true });
+              await handleMint({
+                address: user.address,
+                tier: request.tier[0],
+                amount: request.amount,
+              });
+              await Request.findByIdAndUpdate(request.id, { isCompleted: true });
             }
           } else {
             throw new APIError(`Request with id ${RET_MESSAGE} not found`, NOT_FOUND);
@@ -171,7 +167,7 @@ router.post(
         throw new APIError('Invalid data', BAD_REQUEST);
       }
     } catch (error) {
-      console.log("🚀 ~ file: index.js:173 ~ error:", error)
+      console.log("🚀 ~ file: index.js:173 ~ error:", error.message)
       next(error);
     }
   }
