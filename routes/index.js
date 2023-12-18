@@ -134,6 +134,7 @@ router.post(
   async (req, res, next) => {
     try {
       const { data } = req.body;
+      console.log("🚀 ~ file: index.js:137 ~ data:", data)
       if (Array.isArray(data)) {
         for await (const item of data) {
           const { WALLET_ADDRESS, RET_MESSAGE } = item;
