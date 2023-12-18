@@ -1,4 +1,4 @@
-import { OK, NOT_FOUND } from 'http-status-codes';
+import { OK, NOT_FOUND, BAD_REQUEST } from 'http-status-codes';
 import { Router } from 'express';
 import { body } from 'express-validator';
 import path, { dirname } from 'path';
@@ -128,27 +128,37 @@ router.post(
 );
 router.post(
   '/ukissResponse',
-  validateJWTToken,
+  // validateJWTToken,
   sanitizer(apiValidation),
   decryptResponse,
   async (req, res, next) => {
     try {
       const { data } = req.body;
-      const { WALLET_ADDRESS, RET_MESSAGE } = data;
-      const request = await Request.findById(RET_MESSAGE);
-      if (request) {
-        const user = await User.findByIdAndUpdate(
-          request.user,
-          { address: WALLET_ADDRESS },
-          { new: true }
-        );
+      if (Array.isArray(data)) {
+        for await (const item of data) {
+          const { WALLET_ADDRESS, RET_MESSAGE } = item;
+          const request = await Request.findById(RET_MESSAGE);
+          console.log("🚀 ~ file: index.js:142 ~ forawait ~ request:", request)
+          if (request) {
+            const user = await User.findByIdAndUpdate(
+              request.user,
+              { address: WALLET_ADDRESS },
+              { new: true }
+            );
 
-        await handleMint({
-          address: user.address,
-          tier: request.tier[0],
-          amount: request.amount,
-        });
-        await Request.findByIdAndUpdate(request.id, { isCompleted: true });
+            if (!request.isCompleted) {
+              console.log('🚀 ~ file: index.js:149 ~ forawait ~ isCompleted: called');
+              // await handleMint({
+              //   address: user.address,
+              //   tier: request.tier[0],
+              //   amount: request.amount,
+              // });
+              // await Request.findByIdAndUpdate(request.id, { isCompleted: true });
+            }
+          } else {
+            throw new APIError(`Request with id ${RET_MESSAGE} not found`, NOT_FOUND);
+          }
+        }
 
         res.status(OK).json(
           apiResponse({
@@ -156,13 +166,10 @@ router.post(
           })
         );
       } else {
-        res.status(NOT_FOUND).json(
-          apiResponse({
-            message: `Request with id ${RET_MESSAGE} not found`,
-          })
-        );
+        throw new APIError('Invalid data', BAD_REQUEST);
       }
     } catch (error) {
+      console.log("🚀 ~ file: index.js:173 ~ error:", error)
       next(error);
     }
   }

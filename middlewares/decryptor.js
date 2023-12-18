@@ -31,7 +31,6 @@ export const decryptResponse = async (req, _res, next) => {
   try {
     const { TOKEN } = req.body;
     const decryptedPayload = await decryptJWE(TOKEN);
-    console.log("🚀 ~ file: decryptor.js:43 ~ decryptResponse ~ decryptedPayload:", decryptedPayload)
     req.body.data = decryptedPayload;
     next();
   } catch (error) {
