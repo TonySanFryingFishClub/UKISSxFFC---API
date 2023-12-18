@@ -137,6 +137,7 @@ router.post(
       if (Array.isArray(data)) {
         for await (const item of data) {
           const { WALLET_ADDRESS, RET_MESSAGE } = item;
+          console.log("🚀 ~ file: index.js:140 ~ forawait ~ RET_MESSAGE:", RET_MESSAGE)
           const request = await Request.findById(RET_MESSAGE);
           console.log("🚀 ~ file: index.js:142 ~ forawait ~ request:", request)
           if (request) {
