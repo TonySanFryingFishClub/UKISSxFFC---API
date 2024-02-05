@@ -6,10 +6,11 @@ import jose from 'node-jose';
 import forge from 'node-forge';
 import fs from 'fs';
 import { ethers } from 'ethers';
+import base64url from 'base64url';
 
 import { validateJWTToken } from '../middlewares/validator.js';
 import { decryptResponse } from '../middlewares/decryptor.js';
-import { handleMintRequest } from '../helpers/encryption.js';
+import { generateJWE, handleMintRequest } from '../helpers/encryption.js';
 import { sanitizer } from '../helpers/dataSanitizers.js';
 import User from '../components/user/model.js';
 import Request from '../components/request/model.js';
@@ -157,18 +158,32 @@ router.post(
             throw new APIError(`Request with id ${RET_MESSAGE} not found`, NOT_FOUND);
           }
         }
-
-        res.status(OK).json(
-          apiResponse({
-            message: 'Success',
-          })
-        );
+        const payload = {
+          STATUS: 'OK',
+          TIMESTAMP: Date.now(),
+        };
+        const base64UrlEncoded = base64url(JSON.stringify(payload));
+        const jwe = await generateJWE(payload);
+        res.status(OK).json({
+          PAYLOAD: base64UrlEncoded,
+          SIGNATURE: jwe,
+        });
       } else {
         throw new APIError('Invalid data', BAD_REQUEST);
       }
     } catch (error) {
-      console.log("🚀 ~ file: index.js:173 ~ error:", error.message)
-      next(error);
+      console.log('🚀 ~ file: index.js:173 ~ error:', error.message);
+      const payload = {
+        STATUS: 'ERROR',
+        TIMESTAMP: Date.now(),
+        MESSAGE: error.message,
+      };
+      const base64UrlEncoded = base64url(JSON.stringify(payload));
+      const jwe = await generateJWE(payload);
+      res.status(400).json({
+        PAYLOAD: base64UrlEncoded,
+        SIGNATURE: jwe,
+      });
     }
   }
 );
