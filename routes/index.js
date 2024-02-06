@@ -103,12 +103,14 @@ router.post(
     const user = await User.findOne({ deviceId });
     if (user) {
       if (user?.address) {
-        await handleMint({
+        const result = await handleMint({
           address: user.address,
           tier,
           amount,
         });
+        console.log('🚀 ~ result:', result);
         req.body["NFTMinted"] = true;
+        next();
       } else {
         const request = await Request.create({ deviceId, tier, amount, user: user._id });
         await request.save();
