@@ -21,8 +21,9 @@ export const handleMint = async ({ address, tier, amount }) => {
     const tx = await NFTContract.mint_for_User(address, amount, tier, {
       gasLimit: gas,
     });
-    await tx.wait();
+    const result = await tx.wait();
     console.log('🚀 ~ file: index.js:21 ~ handleMint ~ tx: NFT Minted Successfully');
+    return result;
   } catch (error) {
     console.log('🚀 ~ file: handleMint.js:25 ~ handleMint ~ error:', error.reason);
     throw new APIError(error.message, StatusCodes.BAD_REQUEST);
