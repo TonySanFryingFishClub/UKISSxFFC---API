@@ -42,36 +42,39 @@ export async function handleMintRequest(req, res, next) {
     const { serial, requestId, NFTMinted = false } = req.body;
     console.log("🚀 ~ handleMintRequest ~ NFTMinted:", NFTMinted)
     if(NFTMinted) {
-      return res.status(StatusCodes.OK).json(
+      res.status(StatusCodes.OK).json(
+        apiResponse({
+          message: 'success',
+        })
+      );
+    } else {
+      const jwe = await generateJWE({
+        SERIAL_NO: serial,
+        RET_MESSAGE: requestId,
+      });
+      console.log('🚀 ~ file: encryption.js:46 ~ handleMintRequest ~ jwe:', jwe);
+
+      const projectId = CONFIG.OTHERS.PROJECT_ID;
+
+      const requestPayload = {
+        PROJECT_ID: projectId,
+        TOKEN: jwe,
+      };
+
+      const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${CONFIG.OTHERS.UKISS_TOKEN}`,
+        },
+      });
+      console.log('🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:', response.data);
+
+      res.status(StatusCodes.OK).json(
         apiResponse({
           message: 'success',
         })
       );
     }
-    const jwe = await generateJWE({
-      SERIAL_NO: serial,
-      RET_MESSAGE: requestId,
-    });
-    console.log("🚀 ~ file: encryption.js:46 ~ handleMintRequest ~ jwe:", jwe)
-
-    const projectId = CONFIG.OTHERS.PROJECT_ID;
-
-    const requestPayload = {
-      PROJECT_ID: projectId,
-      TOKEN: jwe,
-    };
-
-    const response = await axios.post(CONFIG.OTHERS.UKISS_API, requestPayload, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${CONFIG.OTHERS.UKISS_TOKEN}`,
-      },
-    });
-    console.log("🚀 ~ file: encryption.js:61 ~ handleMintRequest ~ response:", response.data)
-
-    res.status(StatusCodes.OK).json(apiResponse({
-      message: 'success',
-    }));
   } catch (error) {
     console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error.message)
     next(error);
