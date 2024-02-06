@@ -108,11 +108,7 @@ router.post(
           tier,
           amount,
         });
-        res.status(StatusCodes.OK).json(
-          apiResponse({
-            message: 'success',
-          })
-        );
+        req.body["NFTMinted"] = true;
       } else {
         const request = await Request.create({ deviceId, tier, amount, user: user._id });
         await request.save();

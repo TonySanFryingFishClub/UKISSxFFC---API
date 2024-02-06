@@ -39,7 +39,14 @@ export async function generateJWE(data) {
 
 export async function handleMintRequest(req, res, next) {
   try {
-    const { serial, requestId } = req.body;
+    const { serial, requestId, NFTMinted } = req.body;
+    if(NFTMinted) {
+      return res.status(StatusCodes.OK).json(
+        apiResponse({
+          message: 'success',
+        })
+      );
+    }
     const jwe = await generateJWE({
       SERIAL_NO: serial,
       RET_MESSAGE: requestId,
