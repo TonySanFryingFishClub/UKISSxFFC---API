@@ -11,7 +11,7 @@ const CONFIG = {
     ENV: process.env.NODE_ENV,
   },
   SERVER: {
-    TIMEOUT: 60000, // 1m
+    TIMEOUT: 180000, // 1m
   },
   LOG: {
     PATH: process.env.LOGGING_DIR || 'logs',

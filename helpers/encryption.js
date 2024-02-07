@@ -40,7 +40,6 @@ export async function generateJWE(data) {
 export async function handleMintRequest(req, res, next) {
   try {
     const { serial, requestId, NFTMinted = false } = req.body;
-    console.log("🚀 ~ handleMintRequest ~ NFTMinted:", NFTMinted)
     if(NFTMinted) {
       res.status(StatusCodes.OK).json(
         apiResponse({
@@ -52,7 +51,6 @@ export async function handleMintRequest(req, res, next) {
         SERIAL_NO: serial,
         RET_MESSAGE: requestId,
       });
-      console.log('🚀 ~ file: encryption.js:46 ~ handleMintRequest ~ jwe:', jwe);
 
       const projectId = CONFIG.OTHERS.PROJECT_ID;
 
@@ -76,7 +74,6 @@ export async function handleMintRequest(req, res, next) {
       );
     }
   } catch (error) {
-    console.log("🚀 ~ file: encryption.js:79 ~ handleMintRequest ~ error:", error.message)
     next(error);
   }
 }
