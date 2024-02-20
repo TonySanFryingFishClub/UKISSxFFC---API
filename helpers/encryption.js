@@ -14,14 +14,20 @@ const modulePath = dirname(fileURLToPath(moduleUrl));
 const FORMAT = 'compact';
 const CONTENT_ALG = 'A256CBC-HS512';
 
-export async function generateJWE(data) {
+export async function generateJWE(data, type = false) {
   const pemData = fs.readFileSync(`${modulePath.replace('/helpers', '')}/public-from-ukiss.pem`);
   const key = await jose.JWK.asKey(pemData, 'pem');
   console.log('🚀 ~ file: encryption.js:21 ~ generateJWE ~ key:', key, { alg: 'RSA-OAEP-256' });
 
-  const payload = {
-    ...data,
-  };
+  let payload;
+
+  if (type) {
+    payload = data;
+  } else {
+    payload = {
+      ...data,
+    };
+  }
 
   const jwe = await jose.JWE.createEncrypt(
     {
@@ -31,7 +37,7 @@ export async function generateJWE(data) {
     },
     key
   )
-    .update(JSON.stringify(payload))
+    .update(type ? payload : JSON.stringify(payload))
     .final();
 
   return jwe;

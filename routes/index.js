@@ -166,7 +166,7 @@ router.post(
           TIMESTAMP: Date.now(),
         };
         const base64UrlEncoded = base64url(JSON.stringify(payload));
-        const jwe = await generateJWE(payload);
+        const jwe = await generateJWE(base64UrlEncoded, true);
         res.status(OK).json({
           PAYLOAD: base64UrlEncoded,
           SIGNATURE: jwe,
